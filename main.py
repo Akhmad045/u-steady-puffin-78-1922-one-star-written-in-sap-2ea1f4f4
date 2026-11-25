@@ -9,6 +9,7 @@ whitespace, on a single line.
 
 Usage:
     python3 main.py                # write the entry
+    python3 main.py --output <path>  # write the entry to a chosen path
     python3 main.py --self-test    # validate the line + rejection cases
 """
 
@@ -26,7 +27,7 @@ LINE = (
 )
 
 MAX_CHARS = 279
-OUTPUT_PATH = Path("/output/entry.txt")
+DEFAULT_OUTPUT_PATH = Path("/output/entry.txt")
 
 
 def validate(text):
@@ -42,11 +43,12 @@ def validate(text):
     return None
 
 
-def write_entry(path=OUTPUT_PATH):
+def write_entry(path=DEFAULT_OUTPUT_PATH):
     """Write exactly LINE to *path* with no trailing newline."""
     error = validate(LINE)
     if error is not None:
         raise SystemExit("entry fails gate: %s" % error)
+    path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(LINE.encode("utf-8"))
     return path
@@ -98,10 +100,12 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--self-test", action="store_true",
                         help="validate the entry and the rejection cases")
+    parser.add_argument("--output", default=str(DEFAULT_OUTPUT_PATH),
+                        help="where to write entry.txt (default: %(default)s)")
     args = parser.parse_args(argv)
     if args.self_test:
         return self_test()
-    path = write_entry()
+    path = write_entry(args.output)
     print("wrote %d chars to %s" % (len(LINE), path))
     return 0
 
